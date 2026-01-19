@@ -47,9 +47,7 @@ class Advancement:
     def load_fixups(self, filename):
         """ load a csv file with the format (bsa id#, first name, last name) that contains name changes """
 
-        self.fixups = {}
-
-        with open(filename, 'r') as file:
+        with open(filename, 'r', newline='') as file:
             reader = csv.reader(file)
             next(reader)
             for row in reader:
@@ -65,7 +63,7 @@ class Advancement:
 
         self.rosterTuples = set()
 
-        with open(filename, 'r') as file:
+        with open(filename, 'r', newline='') as file:
             reader = csv.reader(file)
             next(reader)
             for row in reader:
@@ -84,6 +82,7 @@ class Advancement:
         indices_to_delete = []
 
         for idx, row in rank.iterrows():
+            found = 0
             id = row['BSA Member ID']
             if id in self.fixups:  
                 rank.at[idx, "First Name"] = self.fixups[id]['First Name']
@@ -108,6 +107,7 @@ class Advancement:
         indices_to_delete = []
 
         for idx, row in mb.iterrows():
+            found = 0
             id = row['BSA Member ID']
             if id in self.fixups:  
                 mb.at[idx, "First Name"] = self.fixups[id]['First Name']
@@ -130,6 +130,7 @@ class Advancement:
         indices_to_delete = []
 
         for idx, row in award.iterrows():
+            found = 0
             id = row['BSA Member ID']
             if id in self.fixups:  
                 award.at[idx, "First Name"] = self.fixups[id]['First Name']
@@ -173,7 +174,7 @@ class Advancement:
         df = DataFrame(columns=columns)
         df = df.set_index("BSA Member ID", drop=True)
 
-        print (df.describe)
+        print (df.describe())
 
         ids = set(self.df["BSA Member ID"].to_list())
         results = []
