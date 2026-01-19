@@ -5,6 +5,14 @@ import csv
 import numpy as np
 import argparse
 from pandas import Series, DataFrame
+import sys
+
+# Try to import Gooey, but fallback gracefully if not installed (though requirements.txt has it now)
+try:
+    from gooey import Gooey, GooeyParser
+    HAS_GOOEY = True
+except ImportError:
+    HAS_GOOEY = False
 
 class Advancement:
     file_headers=["BSA Member ID","First Name","Middle Name","Last Name","Advancement Type","Advancement","Version",
@@ -20,6 +28,7 @@ class Advancement:
     
     def __init__( self ):
         self.df = DataFrame()
+        self.fixups = {} # Initialize fixups dictionary
 
     def get_rank_order(self, advancement):
         return self.ScoutRanks[advancement]
@@ -155,16 +164,6 @@ class Advancement:
             award.to_excel(writer, sheet_name="Awards", index=False, columns=["First Name","Last Name","Advancement Type", "Advancement",
                                                                           "Date Completed","LeaderApprovedBy","LeaderApprovedDate"])
 
-
-
-        #with pd.ExcelWriter(outputfile) as writer:
-        #    self.rank[self.rank.Awarded != 1].to_excel(writer, sheet_name="Rank", index=False, columns=["First Name","Last Name","Advancement",
-        #                                                                                      "Date Completed","LeaderApprovedBy","LeaderApprovedDate"])
-        #    self.mb[self.mb.Awarded != 1].to_excel(writer, sheet_name="Merit Badges", index=False, columns=["First Name","Last Name","Advancement Type", "Advancement",
-        #                                                                                          "Date Completed","LeaderApprovedBy","LeaderApprovedDate"])
-        #    self.award[self.award.Awarded != 1].to_excel(writer, sheet_name="Awards", index=False, columns=["First Name","Last Name","Advancement Type", "Advancement",
-        #                                                                                          "Date Completed","LeaderApprovedBy","LeaderApprovedDate"])
-
     def generate_adv (self, outputfile):
 
         columns = ["BSA Member ID", "First Name", "Last Name"]
@@ -227,18 +226,7 @@ class Advancement:
         with pd.ExcelWriter(outputfile) as writer:
             cdf.to_excel(writer, sheet_name="Advancement", index=False)
 
-
-if __name__ == "__main__" :
-
-    parser = argparse.ArgumentParser(description='Scoutbook Helper')
-    parser.add_argument("--advancement", dest='advancement', nargs="+", required=True, help='Advancement record export csv from scoutbook')
-    parser.add_argument("--fixups", dest='fixups', required=False, help="CSV file of name fixes.")
-    parser.add_argument("--roster", dest='roster', required=False, help="CSV file of troop roster.")
-
-    parser.add_argument("--coh", dest='coh', required=False, help='Generate a CoH spreadsheet and write to here (filename.xlsx)')
-    parser.add_argument("--adv", dest='adv', required=False, help='Generate a Advancement Report spreadsheet and write to here (filename.xlsx)')
-    args = parser.parse_args()
-
+def run_logic(args):
     print (args.advancement)
 
     adv = Advancement()
@@ -257,4 +245,41 @@ if __name__ == "__main__" :
     
     if args.adv:
         adv.generate_adv(args.adv)
-        
+
+# Definition of main function with Gooey decorator if available
+def get_main():
+    if HAS_GOOEY:
+        @Gooey(program_name="Scoutbook Helper", default_size=(800, 600))
+        def main():
+            parser = GooeyParser(description='Scoutbook Helper')
+            parser.add_argument("--advancement", dest='advancement', nargs="+", required=True, 
+                                help='Advancement record export csv from scoutbook', widget='MultiFileChooser')
+            parser.add_argument("--fixups", dest='fixups', required=False, 
+                                help="CSV file of name fixes.", widget='FileChooser')
+            parser.add_argument("--roster", dest='roster', required=False, 
+                                help="CSV file of troop roster.", widget='FileChooser')
+
+            parser.add_argument("--coh", dest='coh', required=False, 
+                                help='Generate a CoH spreadsheet and write to here (filename.xlsx)', widget='FileSaver')
+            parser.add_argument("--adv", dest='adv', required=False, 
+                                help='Generate a Advancement Report spreadsheet and write to here (filename.xlsx)', widget='FileSaver')
+            
+            args = parser.parse_args()
+            run_logic(args)
+        return main
+    else:
+        def main():
+            parser = argparse.ArgumentParser(description='Scoutbook Helper')
+            parser.add_argument("--advancement", dest='advancement', nargs="+", required=True, help='Advancement record export csv from scoutbook')
+            parser.add_argument("--fixups", dest='fixups', required=False, help="CSV file of name fixes.")
+            parser.add_argument("--roster", dest='roster', required=False, help="CSV file of troop roster.")
+
+            parser.add_argument("--coh", dest='coh', required=False, help='Generate a CoH spreadsheet and write to here (filename.xlsx)')
+            parser.add_argument("--adv", dest='adv', required=False, help='Generate a Advancement Report spreadsheet and write to here (filename.xlsx)')
+            args = parser.parse_args()
+            run_logic(args)
+        return main
+
+if __name__ == "__main__" :
+    main_func = get_main()
+    main_func()

@@ -1,0 +1,36 @@
+name: Build macOS App
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        pip install pyinstaller
+
+    - name: Build with PyInstaller
+      # --onefile creates a single executable
+      # --windowed would suppress the terminal, but since this IS a CLI tool, we keep the terminal for now.
+      run: |
+        pyinstaller --onefile --windowed --name scoutbook scoutbook.py
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: scoutbook-macos
+        path: dist/scoutbook
