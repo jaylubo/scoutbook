@@ -252,16 +252,19 @@ def get_main():
         @Gooey(program_name="Scoutbook Helper", default_size=(800, 600))
         def main():
             parser = GooeyParser(description='Scoutbook Helper')
-            parser.add_argument("--advancement", dest='advancement', nargs="+", required=True, 
+            
+            input_group = parser.add_argument_group("Input Files")
+            input_group.add_argument("--advancement", dest='advancement', nargs="+", required=True, 
                                 help='Advancement record export csv from scoutbook', widget='MultiFileChooser')
-            parser.add_argument("--fixups", dest='fixups', required=False, 
+            input_group.add_argument("--fixups", dest='fixups', required=False, 
                                 help="CSV file of name fixes.", widget='FileChooser')
-            parser.add_argument("--roster", dest='roster', required=False, 
+            input_group.add_argument("--roster", dest='roster', required=False, 
                                 help="CSV file of troop roster.", widget='FileChooser')
 
-            parser.add_argument("--coh", dest='coh', required=False, 
+            output_group = parser.add_argument_group("Output Files")
+            output_group.add_argument("--coh", dest='coh', required=False, 
                                 help='Generate a CoH spreadsheet and write to here (filename.xlsx)', widget='FileSaver')
-            parser.add_argument("--adv", dest='adv', required=False, 
+            output_group.add_argument("--adv", dest='adv', required=False, 
                                 help='Generate a Advancement Report spreadsheet and write to here (filename.xlsx)', widget='FileSaver')
             
             args = parser.parse_args()
@@ -270,12 +273,16 @@ def get_main():
     else:
         def main():
             parser = argparse.ArgumentParser(description='Scoutbook Helper')
-            parser.add_argument("--advancement", dest='advancement', nargs="+", required=True, help='Advancement record export csv from scoutbook')
-            parser.add_argument("--fixups", dest='fixups', required=False, help="CSV file of name fixes.")
-            parser.add_argument("--roster", dest='roster', required=False, help="CSV file of troop roster.")
 
-            parser.add_argument("--coh", dest='coh', required=False, help='Generate a CoH spreadsheet and write to here (filename.xlsx)')
-            parser.add_argument("--adv", dest='adv', required=False, help='Generate a Advancement Report spreadsheet and write to here (filename.xlsx)')
+            input_group = parser.add_argument_group("Input Files")
+            input_group.add_argument("--advancement", dest='advancement', nargs="+", required=True, help='Advancement record export csv from scoutbook')
+            input_group.add_argument("--fixups", dest='fixups', required=False, help="CSV file of name fixes.")
+            input_group.add_argument("--roster", dest='roster', required=False, help="CSV file of troop roster.")
+
+            output_group = parser.add_argument_group("Output Files")
+            output_group.add_argument("--coh", dest='coh', required=False, help='Generate a CoH spreadsheet and write to here (filename.xlsx)')
+            output_group.add_argument("--adv", dest='adv', required=False, help='Generate a Advancement Report spreadsheet and write to here (filename.xlsx)')
+            
             args = parser.parse_args()
             run_logic(args)
         return main
