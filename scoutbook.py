@@ -93,9 +93,13 @@ class Advancement:
         for idx, row in rank.iterrows():
             found = 0
             id = row['BSA Member ID']
-            if id in self.fixups:  
+            if id in self.fixups:
+                print (f"Applying fixup for id {id} {self.fixups[id]['First Name']}")
                 rank.at[idx, "First Name"] = self.fixups[id]['First Name']
                 rank.at[idx, "Last Name"] = self.fixups[id]['Last Name']
+                row["Last Name"] = self.fixups[id]['Last Name']
+                row["First Name"] = self.fixups[id]['First Name']
+
 
             if row["Last Name"] in self.roster:
                 for fn in self.roster[row["Last Name"]]:
@@ -103,7 +107,7 @@ class Advancement:
                         found = 1
 
             if found == 0:
-                print("Dropping: ", row["First Name"], row["Last Name"])
+                print("Rank Dropping: ", row["First Name"], row["Last Name"])
                 indices_to_delete.append(idx)
 
         rank = rank.drop(indices_to_delete)
@@ -118,9 +122,13 @@ class Advancement:
         for idx, row in mb.iterrows():
             found = 0
             id = row['BSA Member ID']
-            if id in self.fixups:  
+            if id in self.fixups:
+                print (f"Applying fixup for id {id} {self.fixups[id]['First Name']}")
                 mb.at[idx, "First Name"] = self.fixups[id]['First Name']
                 mb.at[idx, "Last Name"] = self.fixups[id]['Last Name']
+                row["Last Name"] = self.fixups[id]['Last Name']
+                row["First Name"] = self.fixups[id]['First Name']
+
 
             if row["Last Name"] in self.roster:
                 for fn in self.roster[row["Last Name"]]:
@@ -128,7 +136,7 @@ class Advancement:
                         found = 1
 
             if found == 0:
-                print("Dropping: ", row["First Name"], row["Last Name"])
+                print("MB Dropping: ", row["First Name"], row["Last Name"])
                 indices_to_delete.append(idx)
 
         mb = mb.drop(indices_to_delete)
@@ -144,6 +152,8 @@ class Advancement:
             if id in self.fixups:  
                 award.at[idx, "First Name"] = self.fixups[id]['First Name']
                 award.at[idx, "Last Name"] = self.fixups[id]['Last Name']
+                row["Last Name"] = self.fixups[id]['Last Name']
+                row["First Name"] = self.fixups[id]['First Name']
 
             if row["Last Name"] in self.roster:
                 for fn in self.roster[row["Last Name"]]:
@@ -151,7 +161,7 @@ class Advancement:
                         found = 1
 
             if found == 0:
-                print("Dropping: ", row["First Name"], row["Last Name"])
+                print("Award Dropping: ", row["First Name"], row["Last Name"])
                 indices_to_delete.append(idx)
 
         award = award.drop(indices_to_delete)
