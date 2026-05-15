@@ -87,7 +87,7 @@ class Advancement:
     def generate_coh (self, outputfile):
         """ generate a coh spreadsheet """
 
-        rank = self.rank[self.rank.Awarded != 1]
+        rank = self.rank[self.rank.Awarded != True]
         indices_to_delete = []
 
         for idx, row in rank.iterrows():
@@ -143,7 +143,7 @@ class Advancement:
         sorted_mb = mb.copy()
         sorted_mb = sorted_mb.sort_values(by='Advancement')
 
-        award = self.award[self.award.Awarded != 1]
+        award = self.award[self.award.Awarded != True]
         indices_to_delete = []
 
         for idx, row in award.iterrows():
