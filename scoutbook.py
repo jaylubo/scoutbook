@@ -16,15 +16,15 @@ except ImportError:
 
 class Advancement:
     file_headers=["BSA Member ID","First Name","Middle Name","Last Name","Advancement Type","Advancement","Version",
-                  "Date Completed","Approved","Awarded","MarkedCompletedBy","MarkedCompletedDate","CounselorApprovedBy",
-                  "CounselorApprovedDate","LeaderApprovedBy","LeaderApprovedDate","AwardedBy","AwardedDate", "Unk", "Unk2"]    
+                  "Date Completed","Approved","Awarded","Marked Completed By","Marked Completed Date","Counselor Approved By",
+                  "Counselor Approved Date","Leader Approved By","Leader Approved Date","Awarded By","Awarded Date"]    
 
-    ScoutRanks = { 'Scout' : 1, 'Tenderfoot' : 2, 'Second Class' : 3, 'First Class' : 4, 'Star Scout': 5, 'Life Scout': 6, 'Eagle Scout': 7 }
+    ScoutRanks = { 'Scout Rank' : 1, 'Tenderfoot Rank' : 2, 'Second Class Rank' : 3, 'First Class Rank' : 4, 'Star Scout Rank': 5, 'Life Scout Rank': 6, 'Eagle Scout Rank': 7 }
 
-    EagleReqMB = [ "First Aid", "Citizenship in the Community", "Citizenship in the Nation", "Citizenship in Society",
-                   "Citizenship in the World", "Communication", "Cooking", "Personal Fitness", "Emergency Preparedness", "Lifesaving",
-                   "Environmental Science", "Sustainability", "Personal Management", "Hiking", "Swimming", "Cycling",
-                   "Camping", "Family Life" ]
+    EagleReqMB = [ "First Aid MB", "Citizenship in the Community MB", "Citizenship in the Nation MB", "Citizenship in Society MB",
+                   "Citizenship in the World MB", "Communication MB", "Cooking MB", "Personal Fitness MB", "Emergency Preparedness MB", "Lifesaving MB",
+                   "Environmental Science MB", "Sustainability MB", "Personal Management MB", "Hiking MB", "Swimming MB", "Cycling MB",
+                   "Camping MB", "Family Life MB" ]
     
     def __init__( self ):
         self.df = DataFrame()
@@ -36,7 +36,7 @@ class Advancement:
     def load_file (self, filename):
         """ Load an advancement export file in """
         
-        df = pd.read_csv(filename, skiprows=1, names=self.file_headers)
+        df = pd.read_csv(filename, skiprows=1, names=self.file_headers, on_bad_lines='warn')
 
         print("Reading from {}".format(filename))
         print(df.head())
@@ -45,13 +45,13 @@ class Advancement:
         self.df = pd.concat([self.df, df])
 
         self.rank = self.df[["BSA Member ID","First Name","Middle Name","Last Name","Advancement","Approved",
-                             "Awarded","Date Completed","LeaderApprovedBy","LeaderApprovedDate"]][self.df["Advancement"].isin(self.ScoutRanks)]
+                             "Awarded","Date Completed","Leader Approved By","Leader Approved Date"]][self.df["Advancement"].isin(self.ScoutRanks)]
 
         self.mb = self.df[["BSA Member ID","First Name","Middle Name","Last Name","Advancement Type", "Advancement","Approved",
-                           "Awarded","Date Completed","LeaderApprovedBy","LeaderApprovedDate"]][self.df["Advancement Type"] == "Merit Badge"]
+                           "Awarded","Date Completed","Leader Approved By","Leader Approved Date"]][self.df["Advancement Type"] == "Merit Badges"]
 
         self.award = self.df[["BSA Member ID","First Name","Middle Name","Last Name","Advancement Type", "Advancement","Approved",
-                           "Awarded","Date Completed","LeaderApprovedBy","LeaderApprovedDate"]][self.df["Advancement Type"] == "Award"]
+                           "Awarded","Date Completed","Leader Approved By","Leader Approved Date"]][self.df["Advancement Type"] == "Awards"]
 
     def load_fixups(self, filename):
         """ load a csv file with the format (bsa id#, first name, last name) that contains name changes """
@@ -87,7 +87,7 @@ class Advancement:
     def generate_coh (self, outputfile):
         """ generate a coh spreadsheet """
 
-        rank = self.rank[self.rank.Awarded != True]
+        rank = self.rank[(self.rank.Awarded != True) & (self.rank["Date Completed"].notna())]
         indices_to_delete = []
 
         for idx, row in rank.iterrows():
@@ -116,7 +116,7 @@ class Advancement:
         sorted_rank = sorted_rank.sort_values(by='rank_order')
         sorted_rank = sorted_rank.drop(columns=['rank_order'])
     
-        mb = self.mb[self.mb.Awarded != 1]
+        mb = self.mb[(self.mb.Awarded != True) & (self.mb["Date Completed"].notna())]
         indices_to_delete = []
 
         for idx, row in mb.iterrows():
@@ -143,7 +143,7 @@ class Advancement:
         sorted_mb = mb.copy()
         sorted_mb = sorted_mb.sort_values(by='Advancement')
 
-        award = self.award[self.award.Awarded != True]
+        award = self.award[(self.award.Awarded != True) & (self.award["Date Completed"].notna())]
         indices_to_delete = []
 
         for idx, row in award.iterrows():
@@ -168,11 +168,11 @@ class Advancement:
 
         with pd.ExcelWriter(outputfile) as writer:
             sorted_rank.to_excel(writer, sheet_name="Rank", index=False, columns=["First Name","Last Name","Advancement",
-                                                                          "Date Completed","LeaderApprovedBy","LeaderApprovedDate"])
+                                                                          "Date Completed","Leader Approved By","Leader Approved Date"])
             sorted_mb.to_excel(writer, sheet_name="Merit Badges", index=False, columns=["First Name","Last Name","Advancement Type", "Advancement",
-                                                                          "Date Completed","LeaderApprovedBy","LeaderApprovedDate"])
+                                                                          "Date Completed","Leader Approved By","Leader Approved Date"])
             award.to_excel(writer, sheet_name="Awards", index=False, columns=["First Name","Last Name","Advancement Type", "Advancement",
-                                                                          "Date Completed","LeaderApprovedBy","LeaderApprovedDate"])
+                                                                          "Date Completed","Leader Approved By","Leader Approved Date"])
 
     def generate_adv (self, outputfile):
 
@@ -193,11 +193,11 @@ class Advancement:
         for id in ids:
             found = 0
             d = {}
-            ranks = self.rank[(self.rank["BSA Member ID"] == id) & (self.rank["Approved"] == 1)]["Advancement"].to_list()
+            ranks = self.rank[(self.rank["BSA Member ID"] == id) & (self.rank["Approved"] == True)]["Advancement"].to_list()
             for rank in ranks:
                 d[rank] = "y"
 
-            mbs = self.mb[(self.mb["BSA Member ID"] == id) & (self.mb["Approved"] == 1)]["Advancement"].to_list()
+            mbs = self.mb[(self.mb["BSA Member ID"] == id) & (self.mb["Approved"] == True)]["Advancement"].to_list()
             for mb in mbs:
                 if mb in self.EagleReqMB:
                     d[mb] = "y"
